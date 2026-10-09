@@ -10,7 +10,9 @@ import {
   Cpu,
   BarChart3,
   Network,
-  ListFilter
+  ListFilter,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { AnalysisMode } from '../types';
 
@@ -26,6 +28,8 @@ interface HeaderProps {
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   datasetName: string;
   onOpenPrivacy: () => void;
+  soundEnabled: boolean;
+  onToggleSound: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -39,7 +43,9 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   onFileUpload,
   datasetName,
-  onOpenPrivacy
+  onOpenPrivacy,
+  soundEnabled,
+  onToggleSound
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -123,6 +129,20 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Control Controls & Replay / Dataset switch */}
         <div className="flex items-center space-x-3 text-xs font-mono">
+          {/* Sound Alert Toggle */}
+          <button
+            onClick={onToggleSound}
+            className={`flex items-center space-x-1 px-2.5 py-1 border rounded transition-colors ${
+              soundEnabled
+                ? 'border-[#58a6ff]/40 bg-[#58a6ff]/10 text-[#58a6ff]'
+                : 'border-[#30363d] bg-[#161b22] text-[#8b949e]'
+            }`}
+            title={soundEnabled ? 'Threat Alert Beeps Active' : 'Threat Alert Beeps Muted'}
+          >
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-[#58a6ff]" /> : <VolumeX className="w-3.5 h-3.5 text-[#8b949e]" />}
+            <span className="hidden sm:inline">{soundEnabled ? 'AUDIO ON' : 'MUTED'}</span>
+          </button>
+
           {/* Mode toggle */}
           <div className="flex items-center bg-[#161b22] border border-[#30363d] rounded p-0.5">
             <button

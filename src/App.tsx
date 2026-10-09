@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { NetworkFlow, AnomalyPrediction, AnalysisMode } from './types';
 import { parseCSVContent } from './lib/datasetLoader';
 import { evaluateFlow, calculateModelMetrics } from './lib/anomalyModel';
+import { soundEffects } from './lib/soundEffects';
 import { Header } from './components/Header';
 import { NetworkVisualizer } from './components/NetworkVisualizer';
 import { ThreatPanel } from './components/ThreatPanel';
@@ -32,6 +33,8 @@ export function App() {
   const [selectedEdge, setSelectedEdge] = useState<string | null>(null);
   const [datasetName, setDatasetName] = useState<string>('Monday-WorkingHours.pcap_ISCX.csv');
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [blockedIPs, setBlockedIPs] = useState<Set<string>>(new Set());
 
   // Initial setup: Load default CIC-IDS2017 dataset
   useEffect(() => {
@@ -40,6 +43,20 @@ export function App() {
     if (loaded.length > 0) {
       setSelectedFlow(loaded[0]);
     }
+  }, []);
+
+  // Toggle firewall IP blocking
+  const handleToggleBlockIP = useCallback((ip: string) => {
+    soundEffects.playClickSound();
+    setBlockedIPs((prev) => {
+      const next = new Set(prev);
+      if (next.has(ip)) {
+        next.delete(ip);
+      } else {
+        next.add(ip);
+      }
+      return next;
+    });
   }, []);
 
   // Demo Replay Stream simulation effect
@@ -84,6 +101,10 @@ export function App() {
           isSynthetic: true
         };
 
+        if (isAttack) {
+          soundEffects.playCautionBeep();
+        }
+
         // Keep last 100 flows in stream buffer
         return [newFlow, ...prev.slice(0, 99)];
       });
@@ -101,6 +122,16 @@ export function App() {
     return map;
   }, [flows]);
 
+  // Handle flow selection with audio alert trigger
+  const handleSelectFlow = useCallback((flow: NetworkFlow) => {
+    soundEffects.playClickSound();
+    setSelectedFlow(flow);
+    const pred = evaluateFlow(flow);
+    if (pred.severity === 'HIGH' || pred.isAnomaly) {
+      soundEffects.playCautionBeep();
+    }
+  }, []);
+
   // Calculate real metrics
   const metrics = useMemo(() => {
     return calculateModelMetrics(flows, predictions);
@@ -108,6 +139,7 @@ export function App() {
 
   // Benchmark Dataset select handler
   const handleSelectBenchmarkDataset = useCallback((fileName: string) => {
+    soundEffects.playClickSound();
     setDatasetName(fileName);
     setMode('DATASET_ANALYSIS');
     setIsReplaying(false);
@@ -127,6 +159,7 @@ export function App() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    soundEffects.playClickSound();
     setDatasetName(file.name);
     setMode('DATASET_ANALYSIS');
     setIsReplaying(false);
@@ -152,16 +185,34 @@ export function App() {
       {/* Top Live SOC Header */}
       <Header
         mode={mode}
-        setMode={setMode}
+        setMode={(m) => {
+          soundEffects.playClickSound();
+          setMode(m);
+        }}
         isReplaying={isReplaying}
-        setIsReplaying={setIsReplaying}
+        setIsReplaying={(r) => {
+          soundEffects.playClickSound();
+          setIsReplaying(r);
+        }}
         recordCount={flows.length}
         threatCount={metrics.threatCount}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(t) => {
+          soundEffects.playClickSound();
+          setActiveTab(t);
+        }}
         onFileUpload={handleFileUpload}
         datasetName={datasetName}
-        onOpenPrivacy={() => setIsPrivacyOpen(true)}
+        onOpenPrivacy={() => {
+          soundEffects.playClickSound();
+          setIsPrivacyOpen(true);
+        }}
+        soundEnabled={soundEnabled}
+        onToggleSound={() => {
+          soundEffects.soundEnabled = !soundEnabled;
+          setSoundEnabled(!soundEnabled);
+          soundEffects.playClickSound();
+        }}
       />
 
       {/* Main Workspace Body */}
@@ -172,16 +223,25 @@ export function App() {
               flows={flows}
               predictions={predictions}
               selectedNode={selectedNode}
-              setSelectedNode={setSelectedNode}
+              setSelectedNode={(node) => {
+                soundEffects.playClickSound();
+                setSelectedNode(node);
+              }}
               selectedEdge={selectedEdge}
-              setSelectedEdge={setSelectedEdge}
-              onSelectFlow={(flow) => setSelectedFlow(flow)}
+              setSelectedEdge={(edge) => {
+                soundEffects.playClickSound();
+                setSelectedEdge(edge);
+              }}
+              onSelectFlow={handleSelectFlow}
+              blockedIPs={blockedIPs}
             />
 
             <ThreatPanel
               flow={selectedFlow}
               prediction={selectedFlow ? predictions.get(selectedFlow.id) : undefined}
               onClose={() => setSelectedFlow(null)}
+              blockedIPs={blockedIPs}
+              onToggleBlockIP={handleToggleBlockIP}
             />
           </div>
         )}
@@ -193,7 +253,7 @@ export function App() {
                 flows={flows}
                 predictions={predictions}
                 selectedFlow={selectedFlow}
-                onSelectFlow={(flow) => setSelectedFlow(flow)}
+                onSelectFlow={handleSelectFlow}
               />
             </div>
             <div className="lg:col-span-4">
@@ -201,6 +261,8 @@ export function App() {
                 flow={selectedFlow}
                 prediction={selectedFlow ? predictions.get(selectedFlow.id) : undefined}
                 onClose={() => setSelectedFlow(null)}
+                blockedIPs={blockedIPs}
+                onToggleBlockIP={handleToggleBlockIP}
               />
             </div>
           </div>

@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { NetworkFlow, NodeInfo, EdgeInfo, Severity, AnomalyPrediction } from '../types';
-import { Server, Monitor, ShieldAlert, ShieldCheck, ArrowUpRight, Zap, RefreshCw } from 'lucide-react';
+import { Server, Monitor, ShieldAlert, ShieldCheck, ArrowUpRight, Zap, RefreshCw, Filter, Sliders, ShieldOff } from 'lucide-react';
 
 interface NetworkVisualizerProps {
   flows: NetworkFlow[];
@@ -10,6 +10,7 @@ interface NetworkVisualizerProps {
   selectedEdge: string | null;
   setSelectedEdge: (edgeId: string | null) => void;
   onSelectFlow: (flow: NetworkFlow) => void;
+  blockedIPs?: Set<string>;
 }
 
 export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
@@ -20,13 +21,30 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
   selectedEdge,
   setSelectedEdge,
   onSelectFlow,
+  blockedIPs = new Set(),
 }) => {
-  // Process topology nodes and edges based on flows and anomaly predictions
+  const [minScoreThreshold, setMinScoreThreshold] = useState<number>(0);
+  const [protocolFilter, setProtocolFilter] = useState<'ALL' | 'TCP' | 'UDP' | 'ICMP'>('ALL');
+
+  // Filter flows by sensitivity slider and protocol filter
+  const activeFlows = useMemo(() => {
+    return flows.filter((flow) => {
+      const pred = predictions.get(flow.id);
+      const score = pred ? pred.score : 0;
+
+      if (score < minScoreThreshold / 100) return false;
+      if (protocolFilter !== 'ALL' && flow.protocol !== protocolFilter) return false;
+
+      return true;
+    });
+  }, [flows, predictions, minScoreThreshold, protocolFilter]);
+
+  // Process topology nodes and edges based on active flows and anomaly predictions
   const { nodes } = useMemo(() => {
     const nodeMap = new Map<string, NodeInfo>();
     const edgeMap = new Map<string, EdgeInfo>();
 
-    flows.forEach((flow) => {
+    activeFlows.forEach((flow) => {
       const pred = predictions.get(flow.id);
       const score = pred ? pred.score : 0.1;
       const flowSev = pred ? pred.severity : 'INFO';
@@ -84,7 +102,7 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
       edge.flowCount += 1;
       edge.anomalyScore = Math.max(edge.anomalyScore, score);
       const sevOrder: Record<Severity, number> = { INFO: 0, LOW: 1, MEDIUM: 2, HIGH: 3 };
-      if (sevOrder[flowSev] > sevOrder[edge.severity]) {
+      if (sevOrder[flowSev] > sevOrder[nodeMap.get(flow.sourceIP)?.highestSeverity || 'INFO']) {
         edge.severity = flowSev;
       }
     });
@@ -93,19 +111,19 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
       nodes: Array.from(nodeMap.values()),
       edges: Array.from(edgeMap.values())
     };
-  }, [flows, predictions]);
+  }, [activeFlows, predictions]);
 
   // Filter flows matching selected node or edge
   const filteredFlows = useMemo(() => {
     if (selectedEdge) {
       const [src, dst] = selectedEdge.split('->');
-      return flows.filter((f) => f.sourceIP === src && f.destinationIP === dst);
+      return activeFlows.filter((f) => f.sourceIP === src && f.destinationIP === dst);
     }
     if (selectedNode) {
-      return flows.filter((f) => f.sourceIP === selectedNode || f.destinationIP === selectedNode);
+      return activeFlows.filter((f) => f.sourceIP === selectedNode || f.destinationIP === selectedNode);
     }
-    return flows;
-  }, [flows, selectedNode, selectedEdge]);
+    return activeFlows;
+  }, [activeFlows, selectedNode, selectedEdge]);
 
   const getSeverityBadgeClass = (sev: Severity) => {
     switch (sev) {
@@ -141,25 +159,61 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
         <div className="absolute inset-0 bg-[radial-gradient(#21262d_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
 
         {/* Header Controls */}
-        <div className="flex items-center justify-between z-10 pb-3 border-b border-[#21262d]">
+        <div className="flex flex-wrap items-center justify-between z-10 pb-3 border-b border-[#21262d] gap-2">
           <div className="flex items-center space-x-2">
             <Zap className="w-4 h-4 text-[#58a6ff]" />
             <h2 className="font-mono font-bold text-sm text-[#f0f6fc] uppercase tracking-wider">
               Network Flow Topology Map
             </h2>
           </div>
-          <div className="flex items-center space-x-3 text-xs font-mono">
+
+          <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
+            {/* Anomaly Sensitivity Threshold Slider */}
+            <div className="flex items-center space-x-1.5 bg-[#0d1117] border border-[#30363d] px-2.5 py-1 rounded">
+              <Sliders className="w-3.5 h-3.5 text-[#58a6ff]" />
+              <span className="text-[#8b949e]">Min Score: {minScoreThreshold}%</span>
+              <input
+                type="range"
+                min="0"
+                max="90"
+                step="10"
+                value={minScoreThreshold}
+                onChange={(e) => setMinScoreThreshold(Number(e.target.value))}
+                className="w-20 accent-[#58a6ff] cursor-pointer"
+              />
+            </div>
+
+            {/* Protocol Quick Filter */}
+            <div className="flex items-center bg-[#0d1117] border border-[#30363d] rounded p-0.5 text-[11px]">
+              <Filter className="w-3 h-3 text-[#8b949e] ml-1" />
+              {(['ALL', 'TCP', 'UDP', 'ICMP'] as const).map((proto) => (
+                <button
+                  key={proto}
+                  onClick={() => setProtocolFilter(proto)}
+                  className={`px-2 py-0.5 rounded transition-colors ${
+                    protocolFilter === proto
+                      ? 'bg-[#21262d] text-[#f0f6fc] font-bold border border-[#30363d]'
+                      : 'text-[#8b949e] hover:text-[#c9d1d9]'
+                  }`}
+                >
+                  {proto}
+                </button>
+              ))}
+            </div>
+
             <span className="text-[#8b949e]">Hosts: {nodes.length}</span>
-            {(selectedNode || selectedEdge) && (
+            {(selectedNode || selectedEdge || minScoreThreshold > 0 || protocolFilter !== 'ALL') && (
               <button
                 onClick={() => {
                   setSelectedNode(null);
                   setSelectedEdge(null);
+                  setMinScoreThreshold(0);
+                  setProtocolFilter('ALL');
                 }}
                 className="flex items-center space-x-1 px-2 py-0.5 bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] rounded text-[#58a6ff]"
               >
                 <RefreshCw className="w-3 h-3" />
-                <span>Reset View</span>
+                <span>Reset Filters</span>
               </button>
             )}
           </div>
@@ -170,6 +224,7 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
           {nodes.map((node) => {
             const isSelected = selectedNode === node.id;
             const borderStyle = getSeverityBorderColor(node.highestSeverity);
+            const isBlocked = blockedIPs.has(node.id);
 
             return (
               <div
@@ -178,10 +233,17 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
                   setSelectedEdge(null);
                   setSelectedNode(node.id === selectedNode ? null : node.id);
                 }}
-                className={`cursor-pointer p-3 bg-[#0d1117] border-2 rounded-lg transition-all duration-200 hover:scale-[1.02] ${
+                className={`cursor-pointer p-3 bg-[#0d1117] border-2 rounded-lg transition-all duration-200 hover:scale-[1.02] relative ${
                   isSelected ? 'ring-2 ring-[#58a6ff] bg-[#21262d]' : ''
-                } ${borderStyle}`}
+                } ${isBlocked ? 'opacity-60 border-dashed border-[#f85149]' : borderStyle}`}
               >
+                {isBlocked && (
+                  <div className="absolute -top-2 -right-2 bg-[#f85149] text-white text-[9px] font-bold px-1.5 py-0.2 rounded flex items-center space-x-0.5 shadow">
+                    <ShieldOff className="w-2.5 h-2.5" />
+                    <span>BLOCKED</span>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
                     {node.type === 'target' || node.type === 'gateway' ? (
