@@ -43,6 +43,13 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handleBrowseClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
+    }
+  };
+
   return (
     <header className="bg-[#0d1117] border-b border-[#30363d] text-[#c9d1d9] sticky top-0 z-40">
       {/* Top Bar */}
@@ -163,21 +170,23 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {/* File Upload Trigger */}
+          {/* File Upload Trigger with Hidden HTML Input */}
           <input
             type="file"
             ref={fileInputRef}
             onChange={onFileUpload}
-            accept=".csv"
+            accept=".csv,text/csv"
             className="hidden"
+            aria-label="Upload CSV Dataset"
           />
           <button
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center space-x-1.5 px-3 py-1 bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] rounded text-[#c9d1d9] transition-colors"
-            title="Upload CIC-IDS2017 CSV File"
+            type="button"
+            onClick={handleBrowseClick}
+            className="flex items-center space-x-1.5 px-3 py-1 bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] rounded text-[#c9d1d9] transition-colors cursor-pointer"
+            title="Browse Local Files / Upload CIC-IDS2017 CSV"
           >
             <Upload className="w-3.5 h-3.5 text-[#58a6ff]" />
-            <span>LOAD CSV</span>
+            <span>Browse Local Files</span>
           </button>
 
           {/* Privacy Button */}
