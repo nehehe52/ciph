@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { NetworkFlow, NodeInfo, EdgeInfo, Severity, AnomalyPrediction } from '../types';
-import { Server, Monitor, ShieldAlert, ShieldCheck, ArrowUpRight, Zap, RefreshCw, Filter, Sliders, ShieldOff } from 'lucide-react';
+import { Server, Monitor, ShieldAlert, ShieldCheck, ArrowUpRight, Zap, RefreshCw, Filter, Sliders, ShieldOff, Terminal } from 'lucide-react';
 
 interface NetworkVisualizerProps {
   flows: NetworkFlow[];
@@ -128,50 +128,50 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
   const getSeverityBadgeClass = (sev: Severity) => {
     switch (sev) {
       case 'HIGH':
-        return 'bg-[#f85149]/10 text-[#f85149] border-[#f85149]/30';
+        return 'bg-[#ff3344]/10 text-[#ff3344] border-[#ff3344]/40';
       case 'MEDIUM':
-        return 'bg-[#d29922]/10 text-[#d29922] border-[#d29922]/30';
+        return 'bg-[#ffb000]/10 text-[#ffb000] border-[#ffb000]/40';
       case 'LOW':
-        return 'bg-[#58a6ff]/10 text-[#58a6ff] border-[#58a6ff]/30';
+        return 'bg-[#00e5ff]/10 text-[#00e5ff] border-[#00e5ff]/40';
       default:
-        return 'bg-[#3fb950]/10 text-[#3fb950] border-[#3fb950]/30';
+        return 'bg-[#00ff66]/10 text-[#00ff66] border-[#00ff66]/40';
     }
   };
 
   const getSeverityBorderColor = (sev: Severity) => {
     switch (sev) {
       case 'HIGH':
-        return 'border-[#f85149] text-[#f85149] shadow-[0_0_12px_rgba(248,81,73,0.3)]';
+        return 'border-[#ff3344] text-[#ff3344] shadow-[0_0_12px_rgba(255,51,68,0.3)]';
       case 'MEDIUM':
-        return 'border-[#d29922] text-[#d29922]';
+        return 'border-[#ffb000] text-[#ffb000] shadow-[0_0_8px_rgba(255,176,0,0.2)]';
       case 'LOW':
-        return 'border-[#58a6ff] text-[#58a6ff]';
+        return 'border-[#00e5ff] text-[#00e5ff] shadow-[0_0_8px_rgba(0,229,255,0.2)]';
       default:
-        return 'border-[#3fb950] text-[#3fb950]';
+        return 'border-[#00ff66]/60 text-[#00ff66] shadow-[0_0_8px_rgba(0,255,102,0.15)]';
     }
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 font-mono">
       {/* Topology Map Canvas (8 Cols) */}
-      <div className="lg:col-span-8 bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col justify-between min-h-[520px] relative overflow-hidden">
-        {/* Background Grid Lines */}
-        <div className="absolute inset-0 bg-[radial-gradient(#21262d_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
+      <div className="lg:col-span-8 bg-[#111827] border border-[#1f293d] rounded-lg p-4 flex flex-col justify-between min-h-[520px] relative overflow-hidden shadow-2xl">
+        {/* Background Cyber Grid */}
+        <div className="absolute inset-0 cyber-grid-bg opacity-50 pointer-events-none" />
 
         {/* Header Controls */}
-        <div className="flex flex-wrap items-center justify-between z-10 pb-3 border-b border-[#21262d] gap-2">
+        <div className="flex flex-wrap items-center justify-between z-10 pb-3 border-b border-[#1f293d] gap-2">
           <div className="flex items-center space-x-2">
-            <Zap className="w-4 h-4 text-[#58a6ff]" />
-            <h2 className="font-mono font-bold text-sm text-[#f0f6fc] uppercase tracking-wider">
-              Network Flow Topology Map
+            <Zap className="w-4 h-4 text-[#00e5ff]" />
+            <h2 className="font-bold text-xs text-[#f0f6fc] uppercase tracking-widest">
+              [NETWORK_FLOW_TOPOLOGY_MAP]
             </h2>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
+          <div className="flex flex-wrap items-center gap-3 text-xs">
             {/* Anomaly Sensitivity Threshold Slider */}
-            <div className="flex items-center space-x-1.5 bg-[#0d1117] border border-[#30363d] px-2.5 py-1 rounded">
-              <Sliders className="w-3.5 h-3.5 text-[#58a6ff]" />
-              <span className="text-[#8b949e]">Min Score: {minScoreThreshold}%</span>
+            <div className="flex items-center space-x-1.5 bg-[#070a10] border border-[#1f293d] px-2.5 py-1 rounded">
+              <Sliders className="w-3.5 h-3.5 text-[#00e5ff]" />
+              <span className="text-[#8b949e]">Threshold: {minScoreThreshold}%</span>
               <input
                 type="range"
                 min="0"
@@ -179,12 +179,12 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
                 step="10"
                 value={minScoreThreshold}
                 onChange={(e) => setMinScoreThreshold(Number(e.target.value))}
-                className="w-20 accent-[#58a6ff] cursor-pointer"
+                className="w-20 accent-[#00e5ff] cursor-pointer"
               />
             </div>
 
             {/* Protocol Quick Filter */}
-            <div className="flex items-center bg-[#0d1117] border border-[#30363d] rounded p-0.5 text-[11px]">
+            <div className="flex items-center bg-[#070a10] border border-[#1f293d] rounded p-0.5 text-[11px]">
               <Filter className="w-3 h-3 text-[#8b949e] ml-1" />
               {(['ALL', 'TCP', 'UDP', 'ICMP'] as const).map((proto) => (
                 <button
@@ -192,8 +192,8 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
                   onClick={() => setProtocolFilter(proto)}
                   className={`px-2 py-0.5 rounded transition-colors ${
                     protocolFilter === proto
-                      ? 'bg-[#21262d] text-[#f0f6fc] font-bold border border-[#30363d]'
-                      : 'text-[#8b949e] hover:text-[#c9d1d9]'
+                      ? 'bg-[#1f293d] text-[#00e5ff] font-bold border border-[#00e5ff]/40'
+                      : 'text-[#8b949e] hover:text-[#f0f6fc]'
                   }`}
                 >
                   {proto}
@@ -210,17 +210,17 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
                   setMinScoreThreshold(0);
                   setProtocolFilter('ALL');
                 }}
-                className="flex items-center space-x-1 px-2 py-0.5 bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] rounded text-[#58a6ff]"
+                className="flex items-center space-x-1 px-2 py-0.5 bg-[#1f293d] hover:bg-[#2d3b55] border border-[#00e5ff]/40 rounded text-[#00e5ff] transition-all"
               >
                 <RefreshCw className="w-3 h-3" />
-                <span>Reset Filters</span>
+                <span>[Reset Filters]</span>
               </button>
             )}
           </div>
         </div>
 
         {/* Node Topology Interactive Grid */}
-        <div className="my-auto py-8 z-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="my-auto py-6 z-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {nodes.map((node) => {
             const isSelected = selectedNode === node.id;
             const borderStyle = getSeverityBorderColor(node.highestSeverity);
@@ -233,30 +233,30 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
                   setSelectedEdge(null);
                   setSelectedNode(node.id === selectedNode ? null : node.id);
                 }}
-                className={`cursor-pointer p-3 bg-[#0d1117] border-2 rounded-lg transition-all duration-200 hover:scale-[1.02] relative ${
-                  isSelected ? 'ring-2 ring-[#58a6ff] bg-[#21262d]' : ''
-                } ${isBlocked ? 'opacity-60 border-dashed border-[#f85149]' : borderStyle}`}
+                className={`cursor-pointer p-3 bg-[#070a10] border-2 rounded-lg transition-all duration-200 hover:scale-[1.02] relative ${
+                  isSelected ? 'ring-2 ring-[#00e5ff] bg-[#1f293d]' : ''
+                } ${isBlocked ? 'opacity-60 border-dashed border-[#ff3344]' : borderStyle}`}
               >
                 {isBlocked && (
-                  <div className="absolute -top-2 -right-2 bg-[#f85149] text-white text-[9px] font-bold px-1.5 py-0.2 rounded flex items-center space-x-0.5 shadow">
+                  <div className="absolute -top-2 -right-2 bg-[#ff3344] text-white text-[9px] font-bold px-1.5 py-0.2 rounded flex items-center space-x-0.5 shadow-lg">
                     <ShieldOff className="w-2.5 h-2.5" />
-                    <span>BLOCKED</span>
+                    <span>[ISOLATED]</span>
                   </div>
                 )}
 
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
                     {node.type === 'target' || node.type === 'gateway' ? (
-                      <Server className="w-4 h-4" />
+                      <Server className="w-4 h-4 text-[#00e5ff]" />
                     ) : (
-                      <Monitor className="w-4 h-4" />
+                      <Monitor className="w-4 h-4 text-[#00ff66]" />
                     )}
-                    <span className="font-mono font-bold text-xs truncate max-w-[110px]">
+                    <span className="font-bold text-xs truncate max-w-[110px] text-[#f0f6fc]">
                       {node.label}
                     </span>
                   </div>
                   <span
-                    className={`text-[10px] font-mono px-1.5 py-0.5 rounded border uppercase font-semibold ${getSeverityBadgeClass(
+                    className={`text-[10px] px-1.5 py-0.5 rounded border uppercase font-bold ${getSeverityBadgeClass(
                       node.highestSeverity
                     )}`}
                   >
@@ -264,24 +264,24 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
                   </span>
                 </div>
 
-                <div className="space-y-1 font-mono text-[11px] text-[#8b949e] border-t border-[#21262d] pt-2">
+                <div className="space-y-1 text-[11px] text-[#8b949e] border-t border-[#1f293d] pt-2">
                   <div className="flex justify-between">
                     <span>Flows:</span>
-                    <span className="text-[#c9d1d9] font-medium">{node.flowCount}</span>
+                    <span className="text-[#f0f6fc] font-semibold">{node.flowCount}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Threat Score:</span>
                     <span
-                      className={`font-semibold ${
-                        node.anomalyScore > 0.5 ? 'text-[#f85149]' : 'text-[#3fb950]'
+                      className={`font-bold ${
+                        node.anomalyScore > 0.5 ? 'text-[#ff3344]' : 'text-[#00ff66]'
                       }`}
                     >
                       {(node.anomalyScore * 100).toFixed(0)}%
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Transferred:</span>
-                    <span className="text-[#c9d1d9] text-[10px]">
+                    <span>Traffic:</span>
+                    <span className="text-[#f0f6fc] text-[10px]">
                       {(node.bytesTransferred / 1024).toFixed(1)} KB
                     </span>
                   </div>
@@ -292,47 +292,48 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
         </div>
 
         {/* Legend Footer */}
-        <div className="z-10 pt-3 border-t border-[#21262d] flex flex-wrap items-center justify-between text-xs font-mono text-[#8b949e]">
+        <div className="z-10 pt-3 border-t border-[#1f293d] flex flex-wrap items-center justify-between text-xs text-[#8b949e]">
           <div className="flex items-center space-x-4">
-            <span className="text-[#484f58]">SEVERITY KEYS:</span>
+            <span className="text-[#484f58] uppercase font-bold">[SEVERITY]:</span>
             <span className="flex items-center space-x-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#3fb950]" />
+              <span className="w-2 h-2 rounded-full bg-[#00ff66] led-green" />
               <span>INFO</span>
             </span>
             <span className="flex items-center space-x-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#58a6ff]" />
+              <span className="w-2 h-2 rounded-full bg-[#00e5ff] led-cyan" />
               <span>LOW</span>
             </span>
             <span className="flex items-center space-x-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#d29922]" />
+              <span className="w-2 h-2 rounded-full bg-[#ffb000]" />
               <span>MEDIUM</span>
             </span>
             <span className="flex items-center space-x-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#f85149]" />
-              <span>HIGH / THREAT</span>
+              <span className="w-2 h-2 rounded-full bg-[#ff3344] led-red" />
+              <span>HIGH</span>
             </span>
           </div>
-          <span className="text-[11px] text-[#484f58]">Click any host node to isolate network traffic</span>
+          <span className="text-[11px] text-[#484f58]">Click any host node to isolate network telemetry</span>
         </div>
       </div>
 
       {/* Filtered Telemetry List for Selected Node/Edge (4 Cols) */}
-      <div className="lg:col-span-4 bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col justify-between min-h-[520px]">
+      <div className="lg:col-span-4 bg-[#111827] border border-[#1f293d] rounded-lg p-4 flex flex-col justify-between min-h-[520px] shadow-2xl">
         <div>
-          <div className="flex items-center justify-between pb-3 border-b border-[#21262d] mb-3">
-            <h3 className="font-mono font-bold text-xs text-[#f0f6fc] uppercase tracking-wider flex items-center space-x-1.5">
-              <ArrowUpRight className="w-4 h-4 text-[#3fb950]" />
-              <span>{selectedNode ? `Node Flows (${selectedNode})` : 'Active Network Connections'}</span>
+          <div className="flex items-center justify-between pb-3 border-b border-[#1f293d] mb-3">
+            <h3 className="font-bold text-xs text-[#f0f6fc] uppercase tracking-wider flex items-center space-x-1.5">
+              <ArrowUpRight className="w-4 h-4 text-[#00ff66]" />
+              <span>{selectedNode ? `[NODE_FLOWS: ${selectedNode}]` : '[ACTIVE_FLOW_TELEMETRY]'}</span>
             </h3>
-            <span className="text-xs font-mono text-[#8b949e]">
-              {filteredFlows.length} record{filteredFlows.length !== 1 ? 's' : ''}
+            <span className="text-xs text-[#00e5ff] bg-[#070a10] border border-[#00e5ff]/30 px-2 py-0.5 rounded font-bold">
+              {filteredFlows.length} REC
             </span>
           </div>
 
           <div className="space-y-2 max-h-[410px] overflow-y-auto pr-1">
             {filteredFlows.length === 0 ? (
-              <div className="text-center py-12 text-[#8b949e] font-mono text-xs">
-                No active traffic flows matching selection.
+              <div className="text-center py-12 text-[#8b949e] text-xs space-y-2">
+                <Terminal className="w-8 h-8 text-[#1f293d] mx-auto animate-pulse" />
+                <p>No active network traffic matching telemetry criteria.</p>
               </div>
             ) : (
               filteredFlows.map((flow) => {
@@ -344,29 +345,29 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
                   <div
                     key={flow.id}
                     onClick={() => onSelectFlow(flow)}
-                    className="p-2.5 bg-[#0d1117] hover:bg-[#21262d] border border-[#30363d] rounded cursor-pointer transition-colors space-y-1.5"
+                    className="p-2.5 bg-[#070a10] hover:bg-[#1f293d] border border-[#1f293d] hover:border-[#00e5ff]/40 rounded cursor-pointer transition-all space-y-1.5 group"
                   >
-                    <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-[#f0f6fc] font-semibold flex items-center space-x-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[#f0f6fc] font-bold flex items-center space-x-1">
                         {isAnomaly ? (
-                          <ShieldAlert className="w-3.5 h-3.5 text-[#f85149]" />
+                          <ShieldAlert className="w-3.5 h-3.5 text-[#ff3344]" />
                         ) : (
-                          <ShieldCheck className="w-3.5 h-3.5 text-[#3fb950]" />
+                          <ShieldCheck className="w-3.5 h-3.5 text-[#00ff66]" />
                         )}
                         <span>{flow.protocol}</span>
                       </span>
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded border font-mono ${getSeverityBadgeClass(sev)}`}>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded border uppercase font-bold ${getSeverityBadgeClass(sev)}`}>
                         {pred ? pred.predictedClass : flow.label}
                       </span>
                     </div>
 
-                    <div className="text-[11px] font-mono text-[#8b949e] flex items-center justify-between">
-                      <span className="truncate max-w-[120px]">{flow.sourceIP}:{flow.sourcePort}</span>
-                      <span>&rarr;</span>
-                      <span className="truncate max-w-[120px]">{flow.destinationIP}:{flow.destinationPort}</span>
+                    <div className="text-[11px] text-[#8b949e] flex items-center justify-between">
+                      <span className="truncate max-w-[120px] text-[#f0f6fc]">{flow.sourceIP}:{flow.sourcePort}</span>
+                      <span className="text-[#00e5ff]">&rarr;</span>
+                      <span className="truncate max-w-[120px] text-[#f0f6fc]">{flow.destinationIP}:{flow.destinationPort}</span>
                     </div>
 
-                    <div className="text-[10px] font-mono text-[#484f58] flex justify-between border-t border-[#21262d] pt-1">
+                    <div className="text-[10px] text-[#484f58] flex justify-between border-t border-[#1f293d] pt-1">
                       <span>Pkts: {flow.totalFwdPackets + flow.totalBwdPackets}</span>
                       <span>Bytes: {(flow.totalFwdBytes + flow.totalBwdBytes).toLocaleString()} B</span>
                       <span>Dur: {(flow.flowDuration / 1000).toFixed(1)} ms</span>
@@ -378,9 +379,9 @@ export const NetworkVisualizer: React.FC<NetworkVisualizerProps> = ({
           </div>
         </div>
 
-        <div className="pt-3 border-t border-[#21262d] text-[11px] font-mono text-[#8b949e] flex justify-between">
+        <div className="pt-3 border-t border-[#1f293d] text-[11px] text-[#8b949e] flex justify-between">
           <span>Targeting telemetry:</span>
-          <span className="text-[#58a6ff]">Click flow record for deep inspection</span>
+          <span className="text-[#00e5ff] font-bold">[Inspect Record]</span>
         </div>
       </div>
     </div>

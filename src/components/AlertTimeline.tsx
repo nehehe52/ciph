@@ -46,41 +46,41 @@ export const AlertTimeline: React.FC<AlertTimelineProps> = ({
   const getSeverityBadgeClass = (sev: Severity) => {
     switch (sev) {
       case 'HIGH':
-        return 'bg-[#f85149]/10 text-[#f85149] border-[#f85149]/30';
+        return 'bg-[#ff3344]/10 text-[#ff3344] border-[#ff3344]/40 shadow-[0_0_6px_rgba(255,51,68,0.2)]';
       case 'MEDIUM':
-        return 'bg-[#d29922]/10 text-[#d29922] border-[#d29922]/30';
+        return 'bg-[#ffb000]/10 text-[#ffb000] border-[#ffb000]/40';
       case 'LOW':
-        return 'bg-[#58a6ff]/10 text-[#58a6ff] border-[#58a6ff]/30';
+        return 'bg-[#00e5ff]/10 text-[#00e5ff] border-[#00e5ff]/40';
       default:
-        return 'bg-[#3fb950]/10 text-[#3fb950] border-[#3fb950]/30';
+        return 'bg-[#00ff66]/10 text-[#00ff66] border-[#00ff66]/40';
     }
   };
 
   return (
-    <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-4 font-mono text-xs space-y-4">
+    <div className="bg-[#111827] border border-[#1f293d] rounded-lg p-4 font-mono text-xs space-y-4 shadow-2xl">
       {/* Control Filters Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#21262d]">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#1f293d]">
         <div className="flex items-center space-x-2">
-          <ShieldAlert className="w-4 h-4 text-[#f85149]" />
-          <h2 className="font-bold text-sm text-[#f0f6fc] uppercase tracking-wider">
-            Evidence-First Event Timeline
+          <ShieldAlert className="w-4 h-4 text-[#ff3344]" />
+          <h2 className="font-bold text-xs text-[#f0f6fc] uppercase tracking-widest">
+            [EVIDENCE_FIRST_EVENT_LOG]
           </h2>
-          <span className="text-[10px] bg-[#21262d] text-[#8b949e] px-2 py-0.5 rounded border border-[#30363d]">
-            {filteredFlows.length} Events Logged
+          <span className="text-[10px] bg-[#070a10] text-[#00e5ff] px-2 py-0.5 rounded border border-[#00e5ff]/30 font-bold">
+            {filteredFlows.length} EVENTS
           </span>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Severity Filter buttons */}
-          <div className="flex items-center bg-[#0d1117] border border-[#30363d] rounded p-0.5 text-[11px]">
+          <div className="flex items-center bg-[#070a10] border border-[#1f293d] rounded p-0.5 text-[11px]">
             {(['ALL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'] as const).map((sev) => (
               <button
                 key={sev}
                 onClick={() => setSeverityFilter(sev)}
-                className={`px-2.5 py-1 rounded transition-colors ${
+                className={`px-2.5 py-1 rounded transition-colors font-bold ${
                   severityFilter === sev
-                    ? 'bg-[#21262d] text-[#f0f6fc] font-bold border border-[#30363d]'
-                    : 'text-[#8b949e] hover:text-[#c9d1d9]'
+                    ? 'bg-[#1f293d] text-[#00e5ff] border border-[#00e5ff]/40'
+                    : 'text-[#8b949e] hover:text-[#f0f6fc]'
                 }`}
               >
                 {sev}
@@ -96,18 +96,18 @@ export const AlertTimeline: React.FC<AlertTimelineProps> = ({
               placeholder="Search IP, Proto, Label..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-[#0d1117] border border-[#30363d] rounded pl-8 pr-3 py-1 text-xs text-[#c9d1d9] focus:outline-none focus:border-[#58a6ff] w-48"
+              className="bg-[#070a10] border border-[#1f293d] rounded pl-8 pr-3 py-1 text-xs text-[#f0f6fc] focus:outline-none focus:border-[#00e5ff] w-48 font-mono"
             />
           </div>
 
           {/* Sort Order Toggle */}
           <button
             onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-            className="flex items-center space-x-1 px-2.5 py-1 bg-[#0d1117] hover:bg-[#21262d] border border-[#30363d] rounded text-[#8b949e] hover:text-[#c9d1d9]"
+            className="flex items-center space-x-1 px-2.5 py-1 bg-[#070a10] hover:bg-[#1f293d] border border-[#1f293d] rounded text-[#8b949e] hover:text-[#f0f6fc] transition-colors"
             title="Toggle Timestamp Sort Order"
           >
-            <ArrowUpDown className="w-3.5 h-3.5 text-[#58a6ff]" />
-            <span>{sortOrder === 'desc' ? 'Newest' : 'Oldest'}</span>
+            <ArrowUpDown className="w-3.5 h-3.5 text-[#00e5ff]" />
+            <span>{sortOrder === 'desc' ? '[Newest]' : '[Oldest]'}</span>
           </button>
         </div>
       </div>
@@ -116,18 +116,18 @@ export const AlertTimeline: React.FC<AlertTimelineProps> = ({
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-[#30363d] text-[11px] text-[#8b949e] uppercase bg-[#0d1117]">
-              <th className="py-2 px-3">Timestamp</th>
-              <th className="py-2 px-3">Severity</th>
-              <th className="py-2 px-3">Source Endpoint</th>
-              <th className="py-2 px-3">Destination Endpoint</th>
-              <th className="py-2 px-3">Proto</th>
-              <th className="py-2 px-3">Model Prediction</th>
-              <th className="py-2 px-3">Dataset Label</th>
-              <th className="py-2 px-3">Packets / Bytes</th>
+            <tr className="border-b border-[#1f293d] text-[11px] text-[#8b949e] uppercase bg-[#070a10]">
+              <th className="py-2.5 px-3">Timestamp</th>
+              <th className="py-2.5 px-3">Severity</th>
+              <th className="py-2.5 px-3">Source Endpoint</th>
+              <th className="py-2.5 px-3">Destination Endpoint</th>
+              <th className="py-2.5 px-3">Proto</th>
+              <th className="py-2.5 px-3">Model Prediction</th>
+              <th className="py-2.5 px-3">Dataset Label</th>
+              <th className="py-2.5 px-3">Packets / Bytes</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#21262d] text-xs">
+          <tbody className="divide-y divide-[#1f293d] text-xs">
             {filteredFlows.length === 0 ? (
               <tr>
                 <td colSpan={8} className="py-8 text-center text-[#8b949e]">
@@ -145,8 +145,8 @@ export const AlertTimeline: React.FC<AlertTimelineProps> = ({
                   <tr
                     key={flow.id}
                     onClick={() => onSelectFlow(flow)}
-                    className={`cursor-pointer transition-colors hover:bg-[#21262d]/70 ${
-                      isSelected ? 'bg-[#21262d] border-l-4 border-l-[#58a6ff]' : ''
+                    className={`cursor-pointer transition-all hover:bg-[#1f293d]/80 ${
+                      isSelected ? 'bg-[#1f293d] border-l-4 border-l-[#00e5ff]' : ''
                     }`}
                   >
                     <td className="py-2 px-3 text-[#8b949e] whitespace-nowrap flex items-center space-x-1.5">
@@ -160,20 +160,20 @@ export const AlertTimeline: React.FC<AlertTimelineProps> = ({
                       </span>
                     </td>
 
-                    <td className="py-2 px-3 font-semibold text-[#f0f6fc] whitespace-nowrap">
+                    <td className="py-2 px-3 font-bold text-[#f0f6fc] whitespace-nowrap">
                       {flow.sourceIP}:{flow.sourcePort}
                     </td>
 
-                    <td className="py-2 px-3 font-semibold text-[#f0f6fc] whitespace-nowrap">
+                    <td className="py-2 px-3 font-bold text-[#f0f6fc] whitespace-nowrap">
                       {flow.destinationIP}:{flow.destinationPort}
                     </td>
 
-                    <td className="py-2 px-3 text-[#58a6ff] whitespace-nowrap">
+                    <td className="py-2 px-3 text-[#00e5ff] font-bold whitespace-nowrap">
                       {flow.protocol}
                     </td>
 
                     <td className="py-2 px-3 whitespace-nowrap">
-                      <span className={`font-semibold ${pred && pred.isAnomaly ? 'text-[#f85149]' : 'text-[#3fb950]'}`}>
+                      <span className={`font-bold ${pred && pred.isAnomaly ? 'text-[#ff3344]' : 'text-[#00ff66]'}`}>
                         {pred ? pred.predictedClass : flow.label}
                       </span>
                     </td>
